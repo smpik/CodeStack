@@ -4,19 +4,19 @@ using UnityEngine.UI;
 public class UIDriver : MonoBehaviour
 {
 	//==========================================================================//
-	//	定義																	//
+	//	定義																		//
 	//==========================================================================//
 
 	//--------------------------------------//
-	//	外部定数定義						//
+	//	外部定数定義							//
 	//--------------------------------------//
 
 	//--------------------------------------//
-	//	内部定数定義						//
+	//	内部定数定義							//
 	//--------------------------------------//
 
 	//--------------------------------------//
-	//	内部変数定義						//
+	//	内部変数定義							//
 	//--------------------------------------//
 	private GameObject CanvasMain;//メインキャンバス(ゲームプレイ中のUIを表示するキャンバス)
 	private GameObject CanvasResult;//リザルトキャンバス(ゲームオーバー時のUIを表示するキャンバス)
@@ -35,7 +35,7 @@ public class UIDriver : MonoBehaviour
 	private Text TextResultHighScore;//リザルトキャンバスに表示するハイスコア
 
 	//==========================================================================//
-	//	関数																	//
+	//	関数																		//
 	//==========================================================================//
 
 	//--------------------------------------//
@@ -139,7 +139,7 @@ public class UIDriver : MonoBehaviour
 	}
 
 	//--------------------------------------//
-	//	テキスト設定メソッド				//
+	//	テキスト設定メソッド					//
 	//--------------------------------------//
 	///テキスト設定するものはここに書く
 
@@ -156,7 +156,7 @@ public class UIDriver : MonoBehaviour
 	}
 
 	///TextScore
-	public void SetTextScore(uint score)
+	public void SetTextScore(int score)
 	{
 		TextScore.text = score.ToString();
 	}
@@ -174,7 +174,7 @@ public class UIDriver : MonoBehaviour
 	}
 
 	///TextResultScore
-	public void SetTextResultScore(uint score)
+	public void SetTextResultScore(int score)
 	{
 		TextResultScore.text = score.ToString();
 	}
@@ -186,13 +186,13 @@ public class UIDriver : MonoBehaviour
 	}
 
 	///TextResultHighScore;
-	public void SetTextResultHighScore(uint highScore)
+	public void SetTextResultHighScore(int highScore)
 	{
 		TextResultHighScore.text = highScore.ToString();
 	}
 
 	//--------------------------------------//
-	//	渡し処理							//
+	//	渡し処理								//
 	//--------------------------------------//
 
 }

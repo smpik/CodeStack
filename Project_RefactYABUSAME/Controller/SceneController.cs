@@ -1,31 +1,26 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class SceneDriver : MonoBehaviour
+public class SceneController : MonoBehaviour
 {
 	//==========================================================================//
-	//	定義																	//
+	//	定義																		//
 	//==========================================================================//
 
 	//--------------------------------------//
 	//	外部定数定義							//
 	//--------------------------------------//
-	//引数に設定してswitch文などで切り分けるときに用いるため
-	public enum NAME_SCENE//アルファベット順にすること
-	{
-		MAIN,
-		TITLE,
-	}
 
 	//--------------------------------------//
 	//	内部定数定義							//
 	//--------------------------------------//
-	private const string NameMainScene	= "Main";
-	private const string NameTitleScene = "Title";
 
 	//--------------------------------------//
 	//	内部変数定義							//
 	//--------------------------------------//
+	//Driver
+	private SceneDriver SceneDriver;
+	private SoundDriver SoundDriver;
+	private TimeScaleDriver TimeScaleDriver;
 
 	//==========================================================================//
 	//	関数																		//
@@ -34,27 +29,33 @@ public class SceneDriver : MonoBehaviour
 	//--------------------------------------//
 	//	初期化処理							//
 	//--------------------------------------//
-
-	//--------------------------------------//
-	//	シーン遷移							//
-	//--------------------------------------//
-	public void TranScene(NAME_SCENE nameTransTargetScene)
+	public void StartSceneController()
 	{
-		switch(nameTransTargetScene)
-		{
-			case NAME_SCENE.MAIN:
-				SceneManager.LoadScene(NameMainScene);
-				break;
-			case NAME_SCENE.TITLE:
-				SceneManager.LoadScene(NameTitleScene);
-				break;
-			default:
-				break;
-		}
+		SceneDriver = GameObject.Find("Driver").GetComponent<SceneDriver>();
+		SoundDriver = GameObject.Find("Driver").GetComponent<SoundDriver>();
+		TimeScaleDriver = GameObject.Find("Driver").GetComponent<TimeScaleDriver>();
 	}
 
 	//--------------------------------------//
-	//	渡し処理							//
+	//	シーン遷移処理(ボタンタップ)			//
+	//--------------------------------------//
+	//メインシーンへ遷移
+	public void TransMainScene()
+	{
+		SoundDriver.PlaySoundTapButton();		//ボタンタップ音再生
+		SceneDriver.TranScene(NAME_SCENE.MAIN);	//メインシーンへ遷移
+	}
+
+	//タイトルシーンへ遷移
+	public void TransTitleScene()
+	{
+		SoundDriver.PlaySoundTapButton();			//ボタンタップ音再生
+		TimeScaleDriver.PlayUnityWorldTime();		//ポーズの解除
+		SceneDriver.TranScene(NAME_SCENE.TITLE);	//タイトルシーンへ遷移
+	}
+
+	//--------------------------------------//
+	//	渡し処理								//
 	//--------------------------------------//
 
 }

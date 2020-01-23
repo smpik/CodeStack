@@ -1,31 +1,27 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class SceneDriver : MonoBehaviour
+public class HighScoreDataController : MonoBehaviour
 {
 	//==========================================================================//
-	//	定義																	//
+	//	定義																		//
 	//==========================================================================//
 
 	//--------------------------------------//
 	//	外部定数定義							//
 	//--------------------------------------//
-	//引数に設定してswitch文などで切り分けるときに用いるため
-	public enum NAME_SCENE//アルファベット順にすること
-	{
-		MAIN,
-		TITLE,
-	}
 
 	//--------------------------------------//
 	//	内部定数定義							//
 	//--------------------------------------//
-	private const string NameMainScene	= "Main";
-	private const string NameTitleScene = "Title";
 
 	//--------------------------------------//
 	//	内部変数定義							//
 	//--------------------------------------//
+	//Driver
+	private HighScoreDriver HighScoreDriver;
+
+	//Controller
+	private ScoreDataController ScoreDataController;
 
 	//==========================================================================//
 	//	関数																		//
@@ -34,27 +30,28 @@ public class SceneDriver : MonoBehaviour
 	//--------------------------------------//
 	//	初期化処理							//
 	//--------------------------------------//
+	public void StartHighScoreDataController()
+	{
+		HighScoreDriver = GameObject.Find("Driver").GetComponent<HighScoreDriver>();
+		ScoreDataController = GameObject.Find("ScoreDataController").GetComponent<ScoreDataController>();
+	}
 
 	//--------------------------------------//
-	//	シーン遷移							//
+	//	ハイスコア更新判定処理					//
 	//--------------------------------------//
-	public void TranScene(NAME_SCENE nameTransTargetScene)
+	public void CompareHighScore()
 	{
-		switch(nameTransTargetScene)
-		{
-			case NAME_SCENE.MAIN:
-				SceneManager.LoadScene(NameMainScene);
-				break;
-			case NAME_SCENE.TITLE:
-				SceneManager.LoadScene(NameTitleScene);
-				break;
-			default:
-				break;
+		int scoreNow = ScoreDataController.GetScoreNow();//今回のスコアを取得
+		int highScore = HighScoreDriver.ReadHighScore();//今までのハイスコアを取得
+		
+		if(scoreNow > highScore)
+		{   //上回っていれば更新
+			HighScoreDriver.SaveHighScore(scoreNow);
 		}
 	}
 
 	//--------------------------------------//
-	//	渡し処理							//
+	//	渡し処理								//
 	//--------------------------------------//
 
 }

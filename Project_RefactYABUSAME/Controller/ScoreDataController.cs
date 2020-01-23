@@ -1,31 +1,26 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class SceneDriver : MonoBehaviour
+public class ScoreDataController : MonoBehaviour
 {
 	//==========================================================================//
-	//	定義																	//
+	//	定義																		//
 	//==========================================================================//
 
 	//--------------------------------------//
 	//	外部定数定義							//
 	//--------------------------------------//
-	//引数に設定してswitch文などで切り分けるときに用いるため
-	public enum NAME_SCENE//アルファベット順にすること
-	{
-		MAIN,
-		TITLE,
-	}
 
 	//--------------------------------------//
 	//	内部定数定義							//
 	//--------------------------------------//
-	private const string NameMainScene	= "Main";
-	private const string NameTitleScene = "Title";
 
 	//--------------------------------------//
 	//	内部変数定義							//
 	//--------------------------------------//
+	//Driver
+	private UIDriver UIDriver;
+
+	private int ScoreNow;//現在の得点
 
 	//==========================================================================//
 	//	関数																		//
@@ -34,27 +29,29 @@ public class SceneDriver : MonoBehaviour
 	//--------------------------------------//
 	//	初期化処理							//
 	//--------------------------------------//
-
-	//--------------------------------------//
-	//	シーン遷移							//
-	//--------------------------------------//
-	public void TranScene(NAME_SCENE nameTransTargetScene)
+	public void StartScoreDataController()
 	{
-		switch(nameTransTargetScene)
-		{
-			case NAME_SCENE.MAIN:
-				SceneManager.LoadScene(NameMainScene);
-				break;
-			case NAME_SCENE.TITLE:
-				SceneManager.LoadScene(NameTitleScene);
-				break;
-			default:
-				break;
-		}
+		UIDriver = GameObeject.Find("Driver").GetComponent<UIDriver>();
+		ScoreNow = 0;
 	}
 
 	//--------------------------------------//
-	//	渡し処理							//
+	//	スコア加算処理						//
 	//--------------------------------------//
+	//JudgeHitから呼ばれる
+	public void AddScore()
+	{
+		ScoreNow++;
+		UIDriver.SetTextScore(ScoreNow);//スコアテキストの更新
+	}
+
+	//--------------------------------------//
+	//	渡し処理								//
+	//--------------------------------------//
+	//スコア渡し
+	public int GetScoreNow()
+	{
+		return ScoreNow;
+	}
 
 }
