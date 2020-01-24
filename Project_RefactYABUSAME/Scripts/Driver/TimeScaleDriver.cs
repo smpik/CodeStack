@@ -1,27 +1,20 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class SceneDriver : MonoBehaviour
+public class TimeScaleDriver : MonoBehaviour
 {
 	//==========================================================================//
-	//	定義																	//
+	//	定義																		//
 	//==========================================================================//
 
 	//--------------------------------------//
 	//	外部定数定義							//
 	//--------------------------------------//
-	//引数に設定してswitch文などで切り分けるときに用いるため
-	public enum NAME_SCENE//アルファベット順にすること
-	{
-		MAIN,
-		TITLE,
-	}
 
 	//--------------------------------------//
 	//	内部定数定義							//
 	//--------------------------------------//
-	private const string NameMainScene	= "Main";
-	private const string NameTitleScene = "Title";
+	private const int STOP_UNITY_WORLD_TIME = 0;//ポーズ(時間を止める)
+	private const int PLAY_UNITY_WORLD_TIME = 1;//ポーズ解除
 
 	//--------------------------------------//
 	//	内部変数定義							//
@@ -36,25 +29,23 @@ public class SceneDriver : MonoBehaviour
 	//--------------------------------------//
 
 	//--------------------------------------//
-	//	シーン遷移							//
+	//	UnityWorld時間停止					//
 	//--------------------------------------//
-	public void TranScene(NAME_SCENE nameTransTargetScene)
+	public void StopUnityWorldTime()
 	{
-		switch(nameTransTargetScene)
-		{
-			case NAME_SCENE.MAIN:
-				SceneManager.LoadScene(NameMainScene);
-				break;
-			case NAME_SCENE.TITLE:
-				SceneManager.LoadScene(NameTitleScene);
-				break;
-			default:
-				break;
-		}
+		Time.timeScale = STOP_UNITY_WORLD_TIME;
 	}
 
 	//--------------------------------------//
-	//	渡し処理							//
+	//	UnityWorld時間再生					//
+	//--------------------------------------//
+	public void PlayUnityWorldTime()
+	{
+		Time.timeScale = PLAY_UNITY_WORLD_TIME;
+	}
+
+	//--------------------------------------//
+	//	渡し処理								//
 	//--------------------------------------//
 
 }

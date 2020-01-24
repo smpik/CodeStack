@@ -3,32 +3,38 @@
 public class UnityObjectDriver : MonoBehaviour
 {
 	//==========================================================================//
-	//	定義																	//
+	//	定義																		//
 	//==========================================================================//
 
 	//--------------------------------------//
-	//	外部定数定義						//
+	//	外部定数定義							//
 	//--------------------------------------//
 	//引数に設定してswitch文などで切り分けるときに用いるため
 	public enum NAME_UNITY_OBJECT//アルファベット順にすること
 	{
 		BLOCK,
+		DELETER,
 		PLAYER,
 	}
 
 	//--------------------------------------//
-	//	内部定数定義						//
+	//	内部定数定義							//
 	//--------------------------------------//
 	//Hierarchy上のオブジェクト名を設定(Hierarchy上のオブジェクト名を設定変更したらこっちも要修正)
 	private const string BlockObjectName = "Block";
+	private const string DeleterObjectName = "Deleter";
 	private const string PlayerObjectName = "Player";
 
 	//--------------------------------------//
-	//	内部変数定義						//
+	//	内部変数定義							//
 	//--------------------------------------//
 	//Block
 	private GameObject ObjBlock;
 	private Vector3 PosBlock;
+
+	//Deleter
+	private GameObject ObjDeleter;
+	private Vector3 PosDeleter;
 
 	//Player
 	private GameObject ObjPlayer;
@@ -36,7 +42,7 @@ public class UnityObjectDriver : MonoBehaviour
 	private Vector3 PosPlayer;
 
 	//==========================================================================//
-	//	関数																	//
+	//	関数																		//
 	//==========================================================================//
 
 	//--------------------------------------//
@@ -55,11 +61,12 @@ public class UnityObjectDriver : MonoBehaviour
 	}
 
 	//--------------------------------------//
-	//	アタッチ処理						//
+	//	アタッチ処理							//
 	//--------------------------------------//
 	private void atachGameObject()
 	{
 		ObjBlock = GameObject.Find(BlockObjectName);
+		ObjDeleter = GameObject.Find(DeleterObjectName);
 		ObjPlayer = GameObject.Find(PlayerObjectName);
 	}
 
@@ -71,6 +78,7 @@ public class UnityObjectDriver : MonoBehaviour
 	private void atachPos()
 	{
 		PosBlock = ObjBlock.transform.position;
+		PosDeleter = ObjDeleter.transform.position;
 		PosPlayer = ObjPlayer.transform.position;
 	}
 
@@ -88,7 +96,7 @@ public class UnityObjectDriver : MonoBehaviour
 	}
 
 	//--------------------------------------//
-	//	オブジェクト存在確認処理			//
+	//	オブジェクト存在確認処理				//
 	//--------------------------------------//
 	public bool IsExistHierarchy(NAME_UNITY_OBJECT objectConfirmTarget)
 	{
@@ -99,18 +107,22 @@ public class UnityObjectDriver : MonoBehaviour
 			case NAME_UNITY_OBJECT.BLOCK:
 				ret = GameObject.Find(BlockObjectName);
 				break;
+			case NAME_UNITY_OBJECT.DELETER:
+				ret = GameObject.Find(DeleterObjectName);
+				break;
 			case NAME_UNITY_OBJECT.PLAYER:
 				ret = GameObject.Find(PlayerObjectName);
 				break;
 			default:
 				ret = false;
+				break;
 		}
 
 		return ret;
 	}
 
 	//--------------------------------------//
-	//	GameObject名設定処理				//
+	//	GameObject名設定処理					//
 	//--------------------------------------//
 	public void ChangeGameObjectName(GameObject objectChangeTarget, string newName)
 	{
@@ -125,7 +137,29 @@ public class UnityObjectDriver : MonoBehaviour
 	}
 
 	//--------------------------------------//
-	//	渡し処理							//
+	//	セット処理							//
+	//--------------------------------------//
+	//posセット
+	public void SetPos(NAME_UNITY_OBJECT objectSetPosTarget, Vector3 setPos)
+	{
+		switch(objectSetPosTarget)
+		{
+			case NAME_UNITY_OBJECT.BLOCK:
+				ObjBlock.transform.position = setPos;
+				break;
+			case NAME_UNITY_OBJECT.DELETER:
+				ObjBlock.transform.position = setPos;
+				break;
+			case NAME_UNITY_OBJECT.PLAYER:
+				ObjPlayer.transform.position = setPos;
+				break;
+			default:
+				break;
+		}
+	}
+
+	//--------------------------------------//
+	//	渡し処理								//
 	//--------------------------------------//
 
 	//Pos渡し
@@ -138,11 +172,15 @@ public class UnityObjectDriver : MonoBehaviour
 			case NAME_UNITY_OBJECT.BLOCK:
 				ret = PosBlock;
 				break;
+			case NAME_UNITY_OBJECT.DELETER:
+				ret = PosDeleter;
+				break;
 			case NAME_UNITY_OBJECT.PLAYER:
 				ret = PosPlayer;
 				break;
 			default:
 				ret = new Vector3(0, 0, 0);
+				break;
 		}
 
 		return ret;
@@ -160,6 +198,7 @@ public class UnityObjectDriver : MonoBehaviour
 				break;
 			default:
 				ret = null;
+				break;
 		}
 
 		return ret;

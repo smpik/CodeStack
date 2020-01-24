@@ -43,7 +43,7 @@ public class PlayerController : MonoBehaviour
 	{
 		AnimationDriver = GameObject.Find("Driver").GetComponent<AnimationDriver>();
 		UnityObjectDriver = GameObject.Find("Driver").GetComponent<UnityObjectDriver>();
-		RbPlayer = UnityObjectDriver.GetRb(NAME_UNITY_OBJECT.PLAYER);
+		RbPlayer = UnityObjectDriver.GetRb(UnityObjectDriver.NAME_UNITY_OBJECT.PLAYER);
 		PermitAddForce = true;//初期化(力の印加を禁止するのはポーズ、ゲームオーバーのとき)
 		FlgOnRoad = false;//初期化(trueでもいい気もする)
 	}
@@ -78,7 +78,7 @@ public class PlayerController : MonoBehaviour
 			RbPlayer.constraints = RigidbodyConstraints.FreezeRotation;
 			RbPlayer.AddForce(FORCE_PLAYER_JUMP_X, FORCE_PLAYER_JUMP_Y, FORCE_PLAYER_JUMP_Z);
 
-			Todo;//ジャンプアニメーションへ遷移
+			AnimationDriver.TransitionAnimationPlayer(AnimationDriver.FLAG_ANIMATOR_PLAYER.JUMP,true);//ジャンプアニメーションへ遷移
 		}
 	}
 

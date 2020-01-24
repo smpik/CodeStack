@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class ScoreDataController : MonoBehaviour
+public class SceneDriver : MonoBehaviour
 {
 	//==========================================================================//
 	//	定義																		//
@@ -9,18 +10,22 @@ public class ScoreDataController : MonoBehaviour
 	//--------------------------------------//
 	//	外部定数定義							//
 	//--------------------------------------//
+	//引数に設定してswitch文などで切り分けるときに用いるため
+	public enum NAME_SCENE//アルファベット順にすること
+	{
+		MAIN,
+		TITLE,
+	}
 
 	//--------------------------------------//
 	//	内部定数定義							//
 	//--------------------------------------//
+	private const string NameMainScene	= "Main";
+	private const string NameTitleScene = "Title";
 
 	//--------------------------------------//
 	//	内部変数定義							//
 	//--------------------------------------//
-	//Driver
-	private UIDriver UIDriver;
-
-	private int ScoreNow;//現在の得点
 
 	//==========================================================================//
 	//	関数																		//
@@ -29,29 +34,27 @@ public class ScoreDataController : MonoBehaviour
 	//--------------------------------------//
 	//	初期化処理							//
 	//--------------------------------------//
-	public void StartScoreDataController()
-	{
-		UIDriver = GameObeject.Find("Driver").GetComponent<UIDriver>();
-		ScoreNow = 0;
-	}
 
 	//--------------------------------------//
-	//	スコア加算処理						//
+	//	シーン遷移							//
 	//--------------------------------------//
-	//JudgeHitから呼ばれる
-	public void AddScore()
+	public void TranScene(NAME_SCENE nameTransTargetScene)
 	{
-		ScoreNow++;
-		UIDriver.SetTextScore(ScoreNow);//スコアテキストの更新
+		switch(nameTransTargetScene)
+		{
+			case NAME_SCENE.MAIN:
+				SceneManager.LoadScene(NameMainScene);
+				break;
+			case NAME_SCENE.TITLE:
+				SceneManager.LoadScene(NameTitleScene);
+				break;
+			default:
+				break;
+		}
 	}
 
 	//--------------------------------------//
 	//	渡し処理								//
 	//--------------------------------------//
-	//スコア渡し
-	public int GetScoreNow()
-	{
-		return ScoreNow;
-	}
 
 }

@@ -82,11 +82,11 @@ public class GameController : MonoBehaviour
 		UIDriver.DispResultCanvas();				//リザルトキャンバスを表示
 		SoundDriver.PlaySoundDispResult();			//リザルトキャンバス表示音再生
 		HighScoreDataController.CompareHighScore();	//ハイスコアの更新判定
-		Todo;//リザルトテキスト設定
+		//リザルトテキスト設定
 
 		//コンティニュー時に初期化が必要な変数の初期化
 		TimerController.ResetTimerUntilGameOver();  //ゲームオーバまでの待ち時間カウント用タイマのリセット
-		Todo;//矢の射出許可(ManageArrowにて矢が0本になったら射出禁止にするため)
+		//矢の射出許可(ManageArrowにて矢が0本になったら射出禁止にするため)
 	}
 
 	//リザルトテキスト設定

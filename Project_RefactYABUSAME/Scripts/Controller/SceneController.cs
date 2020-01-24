@@ -43,7 +43,7 @@ public class SceneController : MonoBehaviour
 	public void TransMainScene()
 	{
 		SoundDriver.PlaySoundTapButton();		//ボタンタップ音再生
-		SceneDriver.TranScene(NAME_SCENE.MAIN);	//メインシーンへ遷移
+		SceneDriver.TranScene(SceneDriver.NAME_SCENE.MAIN);	//メインシーンへ遷移
 	}
 
 	//タイトルシーンへ遷移
@@ -51,7 +51,7 @@ public class SceneController : MonoBehaviour
 	{
 		SoundDriver.PlaySoundTapButton();			//ボタンタップ音再生
 		TimeScaleDriver.PlayUnityWorldTime();		//ポーズの解除
-		SceneDriver.TranScene(NAME_SCENE.TITLE);	//タイトルシーンへ遷移
+		SceneDriver.TranScene(SceneDriver.NAME_SCENE.TITLE);	//タイトルシーンへ遷移
 	}
 
 	//--------------------------------------//

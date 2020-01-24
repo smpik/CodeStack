@@ -1,27 +1,25 @@
 ﻿using UnityEngine;
 
-public class TimeScaleDriver : MonoBehaviour
+public class HighScoreDriver : MonoBehaviour
 {
 	//==========================================================================//
-	//	定義																	//
+	//	定義																		//
 	//==========================================================================//
 
 	//--------------------------------------//
-	//	外部定数定義						//
+	//	外部定数定義							//
 	//--------------------------------------//
 
 	//--------------------------------------//
-	//	内部定数定義						//
+	//	内部定数定義							//
 	//--------------------------------------//
-	private const int STOP_UNITY_WORLD_TIME = 0;//ポーズ(時間を止める)
-	private const int PLAY_UNITY_WORLD_TIME = 1;//ポーズ解除
 
 	//--------------------------------------//
-	//	内部変数定義						//
+	//	内部変数定義							//
 	//--------------------------------------//
 
 	//==========================================================================//
-	//	関数																	//
+	//	関数																		//
 	//==========================================================================//
 
 	//--------------------------------------//
@@ -29,23 +27,28 @@ public class TimeScaleDriver : MonoBehaviour
 	//--------------------------------------//
 
 	//--------------------------------------//
-	//	UnityWorld時間停止					//
+	//	HighScore保存						//
 	//--------------------------------------//
-	public void StopUnityWorldTime()
+	public void SaveHighScore(int highScore)
 	{
-		Time.timeScale = STOP_UNITY_WORLD_TIME;
+		PlayerPrefs.SetInt("HighScore", highScore);
+		PlayerPrefs.Save();
 	}
 
 	//--------------------------------------//
-	//	UnityWorld時間再生					//
+	//	HighScore読み出し					//
 	//--------------------------------------//
-	public void PlayUnityWorldTime()
+	public int ReadHighScore()
 	{
-		Time.timeScale = PLAY_UNITY_WORLD_TIME;
+		int ret;
+
+		ret = PlayerPrefs.GetInt("HighScore", 0);
+
+		return ret;
 	}
 
 	//--------------------------------------//
-	//	渡し処理							//
+	//	渡し処理								//
 	//--------------------------------------//
 
 }

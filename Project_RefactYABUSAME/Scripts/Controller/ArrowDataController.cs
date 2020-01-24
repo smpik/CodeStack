@@ -66,7 +66,7 @@ public class ArrowDataController : MonoBehaviour
 	public void AddArrows(int numAdd)
 	{
 		ValArrows += numAdd;				//インクリメント
-		UIDriver.SetTextArrows(ValArrows);	//矢の残り本数テキストの更新
+		UIDriver.SetTextArrow(ValArrows);	//矢の残り本数テキストの更新
 	}
 
 	//--------------------------------------//

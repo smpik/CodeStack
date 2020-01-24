@@ -43,7 +43,7 @@ public class TimerController : MonoBehaviour
 		FlgTimerUntilGameOverOn = false;
 		FlgTimerHittingBlockOn = false;
 		TimerUntilGameOver = TIME_UNTIL_GAME_OVER;
-		TimerHittingBlock = TIME_UNTIL_DAMAGE;
+		TimerUntilDamage = TIME_UNTIL_DAMAGE;
 	}
 
 	//--------------------------------------//
@@ -65,14 +65,14 @@ public class TimerController : MonoBehaviour
 
 		if (FlgTimerHittingBlockOn)
 		{
-			if (TimerHittingBlock > 0)
+			if (TimerUntilDamage > 0)
 			{
-				TimerHittingBlock -= Time.deltaTime;
+				TimerUntilDamage -= Time.deltaTime;
 			}
 			else
 			{
 				//ダメージを与える
-				TimerHittingBlock = TIME_HITTING_BLOCK;//リセット
+				TimerUntilDamage = TIME_UNTIL_DAMAGE;//リセット
 			}
 		}
 	}
@@ -105,7 +105,7 @@ public class TimerController : MonoBehaviour
 	//ブロック接触タイマリセット
 	public void ResetTimerHittingBlock()
 	{
-		TimerHittingBlock = TIME_UNTIL_DAMAGE;
+		TimerUntilDamage = TIME_UNTIL_DAMAGE;
 		FlgTimerHittingBlockOn = false;
 	}
 
