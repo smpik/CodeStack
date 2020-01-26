@@ -24,6 +24,7 @@ public class GameController : MonoBehaviour
 	private UIDriver UIDriver;
 
 	//Controller
+	private ArrowController ArrowController;
 	private ArrowDataController ArrowDataController;
 	private HighScoreDataController HighScoreDataController;
 	private PlayerController PlayerController;
@@ -43,6 +44,8 @@ public class GameController : MonoBehaviour
 		SoundDriver = GameObject.Find("Driver").GetComponent<SoundDriver>();
 		TimeScaleDriver = GameObject.Find("Driver").GetComponent<TimeScaleDriver>();
 		UIDriver = GameObject.Find("Driver").GetComponent<UIDriver>();
+
+		ArrowController = GameObject.Find("ArrowController").GetComponent<ArrowController>();
 		ArrowDataController = GameObject.Find("ArrowDataController").GetComponent<ArrowDataController>();
 		HighScoreDataController = GameObject.Find("HighScoreDataController").GetComponent<HighScoreDataController>();
 		PlayerController = GameObject.Find("Player").GetComponent<PlayerController>();
@@ -81,12 +84,12 @@ public class GameController : MonoBehaviour
 		UIDriver.UndispPoseCanvas();				//ポーズキャンバスを非表示
 		UIDriver.DispResultCanvas();				//リザルトキャンバスを表示
 		SoundDriver.PlaySoundDispResult();			//リザルトキャンバス表示音再生
-		HighScoreDataController.CompareHighScore();	//ハイスコアの更新判定
-		//リザルトテキスト設定
+		HighScoreDataController.CompareHighScore(); //ハイスコアの更新判定
+		setResult();								//リザルトテキスト設定
 
-		//コンティニュー時に初期化が必要な変数の初期化
-		TimerController.ResetTimerUntilGameOver();  //ゲームオーバまでの待ち時間カウント用タイマのリセット
-		//矢の射出許可(ManageArrowにて矢が0本になったら射出禁止にするため)
+		/*	コンティニュー時に初期化が必要な変数の初期化	*/	//←コンティニュー確定してからでよくない?
+		TimerController.ResetTimerUntilGameOver();	//ゲームオーバまでの待ち時間カウント用タイマのリセット
+		ArrowController.SetFlagPermitShoot();		//矢の射出許可(ManageArrowにて矢が0本になったら射出禁止にするため)
 	}
 
 	//リザルトテキスト設定
@@ -105,7 +108,7 @@ public class GameController : MonoBehaviour
 	//--------------------------------------//
 	public void WatchedReward()
 	{
-		//「動画を見てコンティニュー」ボタンを非表示にする。
+		UIDriver.UndispButtonContinue();		//「動画を見てコンティニュー」ボタンを非表示にする。
 		PlayerController.ClaerAddForcePlayer();	//プレイヤに引火している力をリセットする(1回だけ力の印加を解除する。
 		ArrowDataController.GiftArrows();		//矢の本数を回復
 		UIDriver.UndispResultCanvas();			//リザルトキャンバスを非表示にする

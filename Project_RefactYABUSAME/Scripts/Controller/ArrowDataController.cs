@@ -24,6 +24,7 @@ public class ArrowDataController : MonoBehaviour
 	private UIDriver UIDriver;
 
 	//Controller
+	private ArrowController ArrowController;
 	private TimerController TimerController;
 
 	private int ValArrows;//矢の本数
@@ -38,6 +39,8 @@ public class ArrowDataController : MonoBehaviour
 	public void StartArrowDataController()
 	{
 		UIDriver = GameObject.Find("Driver").GetComponent<UIDriver>();
+
+		ArrowController = GameObject.Find("ArrowController").GetComponent<ArrowController>();
 		TimerController = GameObject.Find("TimerController").GetComponent<TimerController>();
 
 		ValArrows = VALUE_DEFAULT_ARROWS;
@@ -53,7 +56,7 @@ public class ArrowDataController : MonoBehaviour
 		if(ValArrows <= VALUE_GAME_OVER_ARROWS)	//矢の本数が0になったら
 		{
 			ValArrows = 0;//矢の本数を0で固定(ブロック衝突時にマイナスの値になってしまうから)
-			//矢の射出禁止
+			ArrowController.ClearFlagPermitShoot();//矢の射出禁止
 			TimerController.SetFlgTimerUntilGameOverOn();//ゲームオーバーまでディレイタイマオン
 		}
 

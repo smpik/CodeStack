@@ -15,15 +15,17 @@ public class UnityObjectDriver : MonoBehaviour
 		BLOCK,
 		DELETER,
 		PLAYER,
+		ROAD,
 	}
 
 	//--------------------------------------//
 	//	内部定数定義							//
 	//--------------------------------------//
 	//Hierarchy上のオブジェクト名を設定(Hierarchy上のオブジェクト名を設定変更したらこっちも要修正)
-	private const string BlockObjectName = "Block";
-	private const string DeleterObjectName = "Deleter";
-	private const string PlayerObjectName = "Player";
+	private const string OBJECT_NAME_TEXT_BLOCK		= "Block";
+	private const string OBJECT_NAME_TEXT_DELETER	= "Deleter";
+	private const string OBJECT_NAME_TEXT_PLAYER	= "Player";
+	private const string OBJECT_NAME_TEXT_ROAD		= "Road";
 
 	//--------------------------------------//
 	//	内部変数定義							//
@@ -65,9 +67,9 @@ public class UnityObjectDriver : MonoBehaviour
 	//--------------------------------------//
 	private void atachGameObject()
 	{
-		ObjBlock = GameObject.Find(BlockObjectName);
-		ObjDeleter = GameObject.Find(DeleterObjectName);
-		ObjPlayer = GameObject.Find(PlayerObjectName);
+		ObjBlock = GameObject.Find(OBJECT_NAME_TEXT_BLOCK);
+		ObjDeleter = GameObject.Find(OBJECT_NAME_TEXT_DELETER);
+		ObjPlayer = GameObject.Find(OBJECT_NAME_TEXT_PLAYER);
 	}
 
 	private void atachRigidbody()
@@ -105,13 +107,33 @@ public class UnityObjectDriver : MonoBehaviour
 		switch (objectConfirmTarget)//アルファベット順にすること
 		{
 			case NAME_UNITY_OBJECT.BLOCK:
-				ret = GameObject.Find(BlockObjectName);
+				ret = GameObject.Find(OBJECT_NAME_TEXT_BLOCK);
 				break;
 			case NAME_UNITY_OBJECT.DELETER:
-				ret = GameObject.Find(DeleterObjectName);
+				ret = GameObject.Find(OBJECT_NAME_TEXT_DELETER);
 				break;
 			case NAME_UNITY_OBJECT.PLAYER:
-				ret = GameObject.Find(PlayerObjectName);
+				ret = GameObject.Find(OBJECT_NAME_TEXT_PLAYER);
+				break;
+			default:
+				ret = false;
+				break;
+		}
+
+		return ret;
+	}
+
+	//--------------------------------------//
+	//	オブジェクト存在確認処理ByID			//
+	//--------------------------------------//
+	public bool IsExistHierarchyByID(NAME_UNITY_OBJECT objectConfirmTarget.uint id)
+	{
+		bool ret = false;
+
+		switch (objectConfirmTarget)//アルファベット順にすること
+		{
+			case NAME_UNITY_OBJECT.ROAD:
+				ret = GameObject.Find(OBJECT_NAME_TEXT_ROAD + id);
 				break;
 			default:
 				ret = false;
@@ -204,4 +226,39 @@ public class UnityObjectDriver : MonoBehaviour
 		return ret;
 	}
 
+	//Pos渡しByID
+	public Vector3 GetPosByID(NAME_UNITY_OBJECT objectGetPosTarget,uint id)
+	{
+		Vector3 ret = new Vector3(0, 0, 0);
+
+		switch (objectGetPosTarget)
+		{
+			case NAME_UNITY_OBJECT.ROAD:
+				ret = GameObject.Find(OBJECT_NAME_TEXT_ROAD + id).transform.position;
+				break;
+			default:
+				ret = new Vector3(0, 0, 0);
+				break;
+		}
+
+		return ret;
+	}
+
+	//Scale渡しByID
+	public Vector3 GetScaleByID(NAME_UNITY_OBJECT objectGetPosTarget, uint id)
+	{
+		Vector3 ret = new Vector3(0, 0, 0);
+
+		switch (objectGetPosTarget)
+		{
+			case NAME_UNITY_OBJECT.ROAD:
+				ret = GameObject.Find(OBJECT_NAME_TEXT_ROAD + id).transform.localScale;
+				break;
+			default:
+				ret = new Vector3(0, 0, 0);
+				break;
+		}
+
+		return ret;
+	}
 }

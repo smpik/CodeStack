@@ -22,6 +22,8 @@ public class UIDriver : MonoBehaviour
 	private GameObject CanvasResult;//リザルトキャンバス(ゲームオーバー時のUIを表示するキャンバス)
 	private GameObject CanvasPose;//ポーズキャンバス(ゲーム中プレイ中のポーズ時のUIを表示するキャンバス)
 
+	private GameObject ButtonContinue;//コンティニューボタン
+
 	private GameObject BlockComing;//ブロック検知警告用UI(表示位置を操作するためGameObject)
 
 	private GameObject TextDamage;//ダメージ表示テキスト(アニメーションを使用するためGameObject)
@@ -53,6 +55,7 @@ public class UIDriver : MonoBehaviour
 		CanvasMain = GameObject.Find("MainCanvas");
 		CanvasResult = GameObject.Find("ResultCanvas");
 		CanvasPose = GameObject.Find("PoseCanvas");
+		ButtonContinue = GameObject.Find("ButtonContinue");
 		BlockComing = GameObject.Find("BlockComing");
 		TextDamage = GameObject.Find("TextDamage");
 		TextInc = GameObject.Find("TextInc");
@@ -106,6 +109,16 @@ public class UIDriver : MonoBehaviour
 	public void UndispResultCanvas()
 	{
 		CanvasResult.SetActive(false);
+	}
+
+	///ButtonContinue
+	public void DispButtonContinue()
+	{
+		ButtonContinue.SetActive(true);
+	}
+	public void UndispButtonContinue()
+	{
+		ButtonContinue.SetActive(false);
 	}
 
 	///BlockComing

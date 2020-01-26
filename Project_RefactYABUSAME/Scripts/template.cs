@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class ClassName : MonoBehaviour
+public class template : MonoBehaviour
 {
 	//==========================================================================//
 	//	定義																		//
