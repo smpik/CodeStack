@@ -28,7 +28,6 @@ public class SensorController : MonoBehaviour
 			if(hittedObjInfo.collider.gameObject.name != SENSORED_COIN)
 			{
 				hittedObjInfo.collider.gameObject.name = SENSORED_COIN;//検出済みコインに名前を変更
-				Debug.Log("ok");
 			}
 		}
     }

@@ -9,7 +9,6 @@ public class RouletteController : MonoBehaviour
 	{
 		DEFAULT = 0,	//通常
 		ROULETTE,		//ルーレット
-		EXCLUSION		//除外
 	}
 	private const bool OFF = false;	//消灯
 	private const bool ON = true;	//点灯
@@ -21,6 +20,8 @@ public class RouletteController : MonoBehaviour
 	private enum MASU_ROULETTE_EVENT
 	{
 		NONE = 0,				//イベントなし
+		ROULETTE_START,			//ルーレット開始イベント
+		ROULETTE_END,			//ルーレット終了イベント
 		ROULETTE_TURN_COMING,	//ルーレット自分の番来たイベント
 		ROULETTE_TURN_END		//ルーレット自分の番終わりイベント
 	}
@@ -31,11 +32,10 @@ public class RouletteController : MonoBehaviour
 	}
 	private struct MasuInfoStruct
 	{
-		public int Id;						//マスごとのID。何番目のマスかを示す(OnMasu1とかの1)
-		public string NameON;				//ONのほうのオブジェクト名
-		public string NameOFF;				//OFFのほうのオブジェクト名
+		public GameObject NameOnObject;		//ONのほうのオブジェクト
+		public GameObject NameOffObject;	//OFFのほうのオブジェクト
 		public ACTION_PATTERN ActionState;	//状態1。大きい状態(ルーレットマスのふるまいに何が要求されているか)
-		public bool DisplayState;			//状態2。小さい状態(点灯/消灯)
+		public bool DisplayState;			//状態2。小さい状態(点灯/消灯。DisplayState=true ⇒ NameON=true、NameOFF=false)
 		public bool Excluded;				//除外されているかを示すフラグ(trueなら除外されているマス)
 		public EventStruct Event;			//イベント
 	}
@@ -44,26 +44,14 @@ public class RouletteController : MonoBehaviour
 		public bool TurnOff;	//消灯要求
 		public bool Roulette;	//ルーレット要求
 	}
-	private const int NUM_MASU_FIRST = 0;//最初のマスの番号
-	private const int NUM_MASU_MAX = 7;//マスの数
-	private const int NUM_EXCLUDE_MAX = 5;//除外できるマスの最大
+	private const int NUM_MASU_FIRST = 0;		//最初のマスの番号
+	private const int NUM_MASU_MAX = 7;			//マスの数
+	private const int NUM_EXCLUDE_MAX = 5;		//除外できるマスの最大
+	private const uint TIME_TURN_ON = 5;		//ルーレットで自分の番が来たときに光らせる時間
+	private const uint TIME_RANDOM_MIN = 70;	//ルーレット時間をランダムに決める際の下限値
+	private const uint TIME_RANDOM_MAX = 150;	//ルーレット時間をランダムに決める際の上限値
 
 	/* 変数実体定義													*/
-	private GameObject OnMasu0;
-	private GameObject OffMasu0;
-	private GameObject OnMasu1;
-	private GameObject OffMasu1;
-	private GameObject OnMasu2;
-	private GameObject OffMasu2;
-	private GameObject OnMasu3;
-	private GameObject OffMasu3;
-	private GameObject OnMasu4;
-	private GameObject OffMasu4;
-	private GameObject OnMasu5;
-	private GameObject OffMasu5;
-	private GameObject OnMasu6;
-	private GameObject OffMasu6;
-
 	private MasuInfoStruct[] MasuInfo;
 
 	private RequestInfoStruct Request;
@@ -71,6 +59,7 @@ public class RouletteController : MonoBehaviour
 	private int RouletteOnMasuIdThisCycle;//今周期に光らせるマスのID
 	private int RouletteOnMasuIdBeforeCycle;//前周期で光らせたマスのID
 	private uint RouletteTimer;//ルーレット残り時間を示すタイマー
+	private uint TurnOnTimer;//ルーレットで自分の番が来たときに光らせる時間を保持するタイマー
 	private int ExcludedMasuCounter;//除外されたマスの数を数えるカウンタ
 	private bool[] ExcludedMasuList;//除外されたマスリスト(trueが除外されている)
 
@@ -83,16 +72,16 @@ public class RouletteController : MonoBehaviour
 		initRequest();                  //RequestInfoの初期化
 
 		/* 各内部変数の初期化 */
-		RouletteOnMasuIdThisCycle = NUM_MASU_FIRST;
-		RouletteOnMasuIdBeforeCycle = NUM_MASU_FIRST;
+		RouletteOnMasuIdThisCycle = NUM_MASU_MAX;
+		RouletteOnMasuIdBeforeCycle = NUM_MASU_MAX;
 		//RouletteTimer = ROULETTE_TIME; ←ランダム値を設定しなきゃ！！
+		TurnOnTimer = TIME_TURN_ON;
 		ExcludedMasuList = new bool[NUM_MASU_MAX];
 		for(int i=NUM_MASU_FIRST;i<NUM_MASU_MAX;i++)
 		{
 			ExcludedMasuList[i] = false;
 		}
 
-		startAttachObject();			//オブジェクトのアタッチ
 	}
 
     // Update is called once per frame
@@ -104,12 +93,12 @@ public class RouletteController : MonoBehaviour
 			for(int masu = NUM_MASU_FIRST; masu < NUM_MASU_MAX; masu++)
 			{
 				fireEvent(masu);//イベント発行
-				//状態遷移
+				transitionDisplayState(masu);//状態遷移
+				setActiveByMasuDisplayState(masu);//出力処理
 			}
-			//出力処理
-			//次周期で使うInput更新処理(タイマとか前回光らせたマスIDとか)
+			clearRequestByInside();//要求クリア処理
 		}
-    }
+	}
 
 	//==============================================================================//
 	//	初期化処理																	//
@@ -127,91 +116,13 @@ public class RouletteController : MonoBehaviour
 	{
 		for (int masu = NUM_MASU_FIRST; masu < NUM_MASU_MAX; masu++)
 		{
-			initMasuInfoId(masu);           //Idの初期化
-			initMasuInfoNameON(masu);       //NameONの初期化
-			initMasuInfoNameOFF(masu);      //NameOFFの初期化
-			initMasuInfoActionState(masu);  //ActionStateの初期化
-			initMasuInfoDisplayState(masu); //DisplayStateの初期化
-			initMasuInfoExcluded(masu);		//Excludedの初期化
-			initMasuInfoEvent(masu);        //Eventの初期化
+			initMasuInfoNameOnObject(masu);		//NameOnObjectの初期化
+			initMasuInfoNameOffObject(masu);	//NameOffObjectの初期化
+			initMasuInfoActionState(masu);		//ActionStateの初期化
+			initMasuInfoDisplayState(masu);		//DisplayStateの初期化
+			initMasuInfoExcluded(masu);			//Excludedの初期化
+			initMasuInfoEvent(masu);			//Eventの初期化
 		}
-	}
-	/* MasuInfoIdの初期化	*/
-	private void initMasuInfoId(int masu)
-	{
-		MasuInfo[masu].Id = masu;
-	}
-	/* MasuInfoNameONの初期化	*/
-	private void initMasuInfoNameON(int masu)
-	{
-		string name;
-
-		switch (masu)
-		{
-			case 0:
-				name = "FaultON";
-				break;
-			case 1:
-				name = "1StepON";
-				break;
-			case 2:
-				name = "2StepON";
-				break;
-			case 3:
-				name = "3StepON";
-				break;
-			case 4:
-				name = "Coin10EventStock+1ON";
-				break;
-			case 5:
-				name = "Coin20EventStock+1ON";
-				break;
-			case 6:
-				name = "Coin50EventStock+1ON";
-				break;
-			default:
-				name = "";
-				Debug.Log("MasuInfo.nameの初期化に失敗しました。");
-				break;
-		}
-
-		MasuInfo[masu].NameON = name;
-	}
-	/* MasuInfoNameOFFの初期化	*/
-	private void initMasuInfoNameOFF(int masu)
-	{
-		string name;
-
-		switch (masu)
-		{
-			case 0:
-				name = "FaultOFF";
-				break;
-			case 1:
-				name = "1StepOFF";
-				break;
-			case 2:
-				name = "2StepOFF";
-				break;
-			case 3:
-				name = "3StepOFF";
-				break;
-			case 4:
-				name = "Coin10EventStock+1OFF";
-				break;
-			case 5:
-				name = "Coin20EventStock+1OFF";
-				break;
-			case 6:
-				name = "Coin50EventStock+1OFF";
-				break;
-			default:
-				name = "";
-				Debug.Log("MasuInfo.nameの初期化に失敗しました。");
-				break;
-		}
-
-		MasuInfo[masu].NameOFF = name;
 	}
 	/* MasuInfoActionStateの初期化	*/
 	private void initMasuInfoActionState(int masu)
@@ -234,6 +145,78 @@ public class RouletteController : MonoBehaviour
 		MasuInfo[masu].Event.TurnOffEvent = MASU_TURN_OFF_EVENT.NONE;
 		MasuInfo[masu].Event.RouletteEvent = MASU_ROULETTE_EVENT.NONE;
 	}
+	/* MasuInfoNameOnObjectの初期化	*/
+	private void initMasuInfoNameOnObject(int masu)
+	{
+		GameObject obj;
+
+		switch (masu)
+		{
+			case 0:
+				obj = GameObject.Find("FaultON");
+				break;
+			case 1:
+				obj = GameObject.Find("1StepON");
+				break;
+			case 2:
+				obj = GameObject.Find("2StepON");
+				break;
+			case 3:
+				obj = GameObject.Find("3StepON");
+				break;
+			case 4:
+				obj = GameObject.Find("Coin10EventStock+1ON");
+				break;
+			case 5:
+				obj = GameObject.Find("Coin20EventStock+1ON");
+				break;
+			case 6:
+				obj = GameObject.Find("Coin50EventStock+1ON");
+				break;
+			default:
+				obj = null;//FS。NullRefernceにする。
+				Debug.Log("MasuInfo.NameOnObjectの初期化に失敗しました。");
+				break;
+		}
+
+		MasuInfo[masu].NameOnObject = obj;
+	}
+	/* MasuInfoNameOffObjectの初期化	*/
+	private void initMasuInfoNameOffObject(int masu)
+	{
+		GameObject obj;
+
+		switch (masu)
+		{
+			case 0:
+				obj = GameObject.Find("FaultOFF");
+				break;
+			case 1:
+				obj = GameObject.Find("1StepOFF");
+				break;
+			case 2:
+				obj = GameObject.Find("2StepOFF");
+				break;
+			case 3:
+				obj = GameObject.Find("3StepOFF");
+				break;
+			case 4:
+				obj = GameObject.Find("Coin10EventStock+1OFF");
+				break;
+			case 5:
+				obj = GameObject.Find("Coin20EventStock+1OFF");
+				break;
+			case 6:
+				obj = GameObject.Find("Coin50EventStock+1OFF");
+				break;
+			default:
+				obj = null;//FS。NullRefernceにする。
+				Debug.Log("MasuInfo.NameOffObjectの初期化に失敗しました。");
+				break;
+		}
+
+		MasuInfo[masu].NameOffObject = obj;
+	}
 	//==================================================//
 	/* Requestの各メンバを初期化する						*/
 	//==================================================//
@@ -241,26 +224,6 @@ public class RouletteController : MonoBehaviour
 	{
 		Request.TurnOff = false;
 		Request.Roulette = false;
-	}
-	//==================================================//
-	/* オブジェクトのアタッチを行う							*/
-	//==================================================//
-	private void startAttachObject()
-	{
-		OnMasu0 = GameObject.Find("FaultON");
-		OffMasu0 = GameObject.Find("FaultOFF");
-		OnMasu1 = GameObject.Find("1StepON");
-		OffMasu1 = GameObject.Find("1StepOFF");
-		OnMasu2 = GameObject.Find("2StepON");
-		OffMasu2 = GameObject.Find("2StepOFF");
-		OnMasu3 = GameObject.Find("3StepON");
-		OffMasu3 = GameObject.Find("3StepOFF");
-		OnMasu4 = GameObject.Find("Coin10EventStock+1ON");
-		OffMasu4 = GameObject.Find("Coin10EventStock+1OFF");
-		OnMasu5 = GameObject.Find("Coin20EventStock+1ON");
-		OffMasu5 = GameObject.Find("Coin20EventStock+1OFF");
-		OnMasu6 = GameObject.Find("Coin50EventStock+1ON");
-		OffMasu6 = GameObject.Find("Coin50EventStock+1OFF");
 	}
 	//==============================================================================//
 	//	Update処理																	//
@@ -294,13 +257,30 @@ public class RouletteController : MonoBehaviour
 	/* ルーレット要求によるInput確定処理(ルーレット継続するか、光らせるマスを更新する)	*/
 	private void decideInputByRoulette()
 	{
+		timerCount();
+
 		excludeMasu();//除外処理
-		updateRouletteOnMasuAvoidExcludedMasu();//除外マスを避けて光らせるマスを更新する
-		
-		/* ルーレット継続判定	*/
-		if (RouletteTimer<=0)//ルーレット残り時間なしなら
+
+		RouletteOnMasuIdBeforeCycle = RouletteOnMasuIdThisCycle;//前回光らせたマスIDの更新
+
+		/* 光らせるマス更新	*/
+		if (TurnOnTimer <= 0)//光らせる時間(点灯時間)が終わったなら
 		{
-			ClearRouletteRequest();//ルーレット要求をクリアする(今回のルーレット処理は動く)
+			updateRouletteOnMasuAvoidExcludedMasu();//除外マスを避けて光らせるマスを更新する
+			setTurnOnTimer();//点灯時間タイマをリセット
+		}
+
+	}
+	/* タイマーカウント	*/
+	private void timerCount()
+	{
+		if (RouletteTimer > 0)
+		{
+			RouletteTimer--;
+		}
+		if(TurnOnTimer > 0)
+		{
+			TurnOnTimer--;
 		}
 	}
 	/* 除外処理	*/
@@ -309,43 +289,45 @@ public class RouletteController : MonoBehaviour
 		/* 各マスが除外の対象になっていないかチェックする	*/
 		for (int masu = NUM_MASU_FIRST; masu < NUM_MASU_MAX; masu++)
 		{
+			string name = MasuInfo[masu].NameOnObject.name;
+
 			switch (ExcludedMasuCounter)
 			{
 				case 1:
 					/* 除外マスカウンタが1なら1すすむマスを除外	*/
-					if (MasuInfo[masu].NameON == "1StepON")//ON、OFFどちらでもいい(1すすむマスだと判別できれば)
+					if (name == "1StepON")//ON、OFFどちらでもいい(1すすむマスだと判別できれば)
 					{
 						MasuInfo[masu].Excluded = true;
 					}
 					break;
 				case 2:
 					/* 除外マスカウンタが2なら2すすむマスも除外	*/
-					if( (MasuInfo[masu].NameON == "1StepON") || (MasuInfo[masu].NameON == "2StepON"))
+					if( (name == "1StepON") || (name == "2StepON"))
 					{
 						MasuInfo[masu].Excluded = true;
 					}
 					break;
 				case 3:
 					/* 除外マスカウンタが3ならコイン50イベントストック+1マスも除外	*/
-					if ((MasuInfo[masu].NameON == "1StepON") || (MasuInfo[masu].NameON == "2StepON")
-						|| (MasuInfo[masu].NameON == "Coin50EventStock+1ON"))
+					if ((name == "1StepON") || (name == "2StepON")
+						|| (name == "Coin50EventStock+1ON"))
 					{
 						MasuInfo[masu].Excluded = true;
 					}
 					break;
 				case 4:
 					/* 除外マスカウンタが4ならコイン20イベントストック+1マスも除外	*/
-					if ((MasuInfo[masu].NameON == "1StepON") || (MasuInfo[masu].NameON == "2StepON")
-						|| (MasuInfo[masu].NameON == "Coin50EventStock+1ON") || (MasuInfo[masu].NameON == "Coin20EventStock+1ON"))
+					if ((name == "1StepON") || (name == "2StepON")
+						|| (name == "Coin50EventStock+1ON") || (name == "Coin20EventStock+1ON"))
 					{
 						MasuInfo[masu].Excluded = true;
 					}
 					break;
 				case 5:
 					/* 除外マスカウンタが5ならコイン10イベントストック+1マスも除外	*/
-					if ((MasuInfo[masu].NameON == "1StepON") || (MasuInfo[masu].NameON == "2StepON")
-						|| (MasuInfo[masu].NameON == "Coin50EventStock+1ON") || (MasuInfo[masu].NameON == "Coin20EventStock+1ON")
-						|| (MasuInfo[masu].NameON == "Coin10EventStock+1ON"))
+					if ((name == "1StepON") || (name == "2StepON")
+						|| (name == "Coin50EventStock+1ON") || (name == "Coin20EventStock+1ON")
+						|| (name == "Coin10EventStock+1ON"))
 					{
 						MasuInfo[masu].Excluded = true;
 					}
@@ -379,36 +361,134 @@ public class RouletteController : MonoBehaviour
 	//==================================================//
 	private void fireEvent(int masu)
 	{
-		if(Request.TurnOff)
-		{
-			fireEventByTurnOff(masu);
-		}
-		if(Request.Roulette)
-		{
-			fireEventByRoulette(masu);
-		}
+		fireEventByTurnOff(masu);
+		fireEventByRoulette(masu);
 	}
 	/* 消灯イベント発行	*/
 	private void fireEventByTurnOff(int masu)
 	{
-		MasuInfo[masu].Event.TurnOffEvent = MASU_TURN_OFF_EVENT.TURN_OFF;
+		MasuInfo[masu].Event.TurnOffEvent = MASU_TURN_OFF_EVENT.NONE;//何もなければイベントなし(FS)
+
+		if (Request.TurnOff)
+		{	//消灯要求あり
+			MasuInfo[masu].Event.TurnOffEvent = MASU_TURN_OFF_EVENT.TURN_OFF;//消灯イベント発行
+		}
 	}
 	/* ルーレットイベント発行	*/
 	private void fireEventByRoulette(int masu)
 	{
-		if ((masu != RouletteOnMasuIdBeforeCycle) && (masu == RouletteOnMasuIdThisCycle))
-		{	//自分が光る番が来たら(= 前回は自分じゃない && 今回は自分)
+		MasuInfo[masu].Event.RouletteEvent = MASU_ROULETTE_EVENT.NONE;//何もなければイベントなし(FS)
+
+		if ((MasuInfo[masu].ActionState == ACTION_PATTERN.DEFAULT) && (Request.Roulette == true))
+		{   //ルーレットが始まったら(= 前回まで通常状態 && ルーレット要求あり)
+			MasuInfo[masu].Event.RouletteEvent = MASU_ROULETTE_EVENT.ROULETTE_START;//ルーレット開始イベント発行
+		}
+		if ((MasuInfo[masu].ActionState == ACTION_PATTERN.ROULETTE) && (masu != RouletteOnMasuIdBeforeCycle) && (masu == RouletteOnMasuIdThisCycle))
+		{	//自分が光る番が来たら(= ルーレット状態 && 前回は自分じゃない && 今回は自分)
 			MasuInfo[masu].Event.RouletteEvent = MASU_ROULETTE_EVENT.ROULETTE_TURN_COMING;//自分の番来たイベント発行
 		}
-		else if( (masu == RouletteOnMasuIdBeforeCycle) && (masu != RouletteOnMasuIdThisCycle) )
-		{	//自分が光る番がおわってたら(= 前回は自分 && 今回は自分じゃない)
+		if ((MasuInfo[masu].ActionState == ACTION_PATTERN.ROULETTE) && (masu == RouletteOnMasuIdBeforeCycle) && (masu != RouletteOnMasuIdThisCycle))
+		{   //自分が光る番がおわってたら(= ルーレット状態 && 前回は自分 && 今回は自分じゃない)
 			MasuInfo[masu].Event.RouletteEvent = MASU_ROULETTE_EVENT.ROULETTE_TURN_END;//自分の番終わりイベント発行
 		}
-		else//それ以外ではイベントなし(FS)
-		{
-			MasuInfo[masu].Event.RouletteEvent = MASU_ROULETTE_EVENT.NONE;
+		if ((MasuInfo[masu].ActionState == ACTION_PATTERN.ROULETTE) && (Request.Roulette == false))	//自分の番イベントを書き換える(ルーレット終了イベントのほうが優先度高)ためこの判定は一番最後
+		{   //ルーレットが終わったら(= 前回までルーレット状態 && ルーレット要求なし)
+			MasuInfo[masu].Event.RouletteEvent = MASU_ROULETTE_EVENT.ROULETTE_END;//ルーレット終了イベント発行
 		}
 	}
+	//==================================================//
+	/* 状態遷移											*/
+	//==================================================//
+	/* マス表示状態の状態遷移	*/
+	private void transitionDisplayState(int masu)
+	{
+		switch(MasuInfo[masu].ActionState)
+		{
+			case ACTION_PATTERN.DEFAULT:
+				transitionDisplayStateByDefault(masu);//通常状態での状態遷移処理を実行
+				break;
+			case ACTION_PATTERN.ROULETTE:
+				transitionDisplayStateByRoulette(masu);//ルーレット状態での状態遷移処理を実行
+				break;
+			default://FS。なにもしない
+				break;
+		}
+	}
+	/* 通常状態での状態遷移処理	*/
+	private void transitionDisplayStateByDefault(int masu)
+	{
+		/* ルーレット開始イベント	*/
+		if ((MasuInfo[masu].ActionState == ACTION_PATTERN.DEFAULT)
+			&& (MasuInfo[masu].Event.RouletteEvent == MASU_ROULETTE_EVENT.ROULETTE_START))
+		{
+			MasuInfo[masu].ActionState = ACTION_PATTERN.ROULETTE;	//大状態=ルーレット
+			MasuInfo[masu].DisplayState = OFF;						//小状態=消灯(強制的にOFFにする。ルーレット開始時に点灯しているマスを消すため)
+		}
+
+		/* 消灯イベント	*/
+		if ((MasuInfo[masu].ActionState == ACTION_PATTERN.DEFAULT)
+			&& (MasuInfo[masu].Event.TurnOffEvent == MASU_TURN_OFF_EVENT.TURN_OFF))
+		{
+												//大状態=通常(変化なし)
+			MasuInfo[masu].DisplayState = OFF;	//小状態=消灯
+		}
+	}
+	/* ルーレット状態での状態遷移処理	*/
+	private void transitionDisplayStateByRoulette(int masu)
+	{
+		/* ルーレット終了イベント	*/
+		if((MasuInfo[masu].ActionState == ACTION_PATTERN.ROULETTE)
+			&& (MasuInfo[masu].Event.RouletteEvent == MASU_ROULETTE_EVENT.ROULETTE_END))
+		{
+			MasuInfo[masu].ActionState = ACTION_PATTERN.DEFAULT;    //大状態=通常
+																	//小状態は今の状態に依存
+		}
+
+		/* ルーレット自分の番来たイベント	*/
+		if((MasuInfo[masu].ActionState == ACTION_PATTERN.ROULETTE)
+			&& (MasuInfo[masu].Event.RouletteEvent == MASU_ROULETTE_EVENT.ROULETTE_TURN_COMING))
+		{
+												//大状態=ルーレット(変化なし)
+			MasuInfo[masu].DisplayState = ON;	//小状態=点灯
+		}
+
+		/* ルーレット自分の番終わりイベント	*/
+		if((MasuInfo[masu].ActionState == ACTION_PATTERN.ROULETTE)
+			&& (MasuInfo[masu].Event.RouletteEvent == MASU_ROULETTE_EVENT.ROULETTE_TURN_END))
+		{
+												//大状態=ルーレット(変化なし)
+			MasuInfo[masu].DisplayState = OFF;	//小状態=消灯
+		}
+
+		/* 消灯イベント	*/
+		if ((MasuInfo[masu].ActionState == ACTION_PATTERN.ROULETTE)
+			&& (MasuInfo[masu].Event.TurnOffEvent == MASU_TURN_OFF_EVENT.TURN_OFF))
+		{
+			MasuInfo[masu].ActionState = ACTION_PATTERN.DEFAULT;	//大状態=通常
+			MasuInfo[masu].DisplayState = OFF;                      //小状態=消灯
+		}
+	}
+	//==================================================//
+	/* 出力処理											*/
+	//==================================================//
+	private void setActiveByMasuDisplayState(int masu)
+	{	/* DisplayStateはNameONを基準に点灯/消灯としているためNameOFFへの出力は反転させればよい	*/
+		MasuInfo[masu].NameOnObject.SetActive(MasuInfo[masu].DisplayState);//NameOnObjectへの出力
+		MasuInfo[masu].NameOffObject.SetActive(!MasuInfo[masu].DisplayState);//NameOffObjectへの出力
+	}
+	//==================================================//
+	/* クラス内部による要求クリア処理						*/
+	//==================================================//
+	private void clearRequestByInside()
+	{
+		Request.TurnOff = false;//消灯要求解除(消灯要求は1周期の処理で完了するため必ずクリアする)
+
+		if (RouletteTimer <= 0)//ルーレット残り時間なしなら
+		{
+			ClearRouletteRequest();//ルーレット要求をクリアする(今回のルーレット処理は動く)
+		}
+	}
+
 	//==============================================================================//
 	//	Setter、Getter																//
 	//==============================================================================//
@@ -426,16 +506,29 @@ public class RouletteController : MonoBehaviour
 	public void SetRouletteRequest()
 	{
 		Request.Roulette = true;
+		setRouletteTimer();//ルーレット時間の設定
 	}
 	public void ClearRouletteRequest()
 	{
 		Request.Roulette = false;
 	}
-	public void incrementExcludedMasuCounter()
+	public void IncrementExcludedMasuCounter()
 	{
 		if (ExcludedMasuCounter < NUM_EXCLUDE_MAX)
 		{
 			ExcludedMasuCounter++;
 		}
+	}
+	//==================================================//
+	/* ルーレット時間の設定								*/
+	//==================================================//
+	private void setRouletteTimer()
+	{
+		uint randomTime = (uint)Random.Range(TIME_RANDOM_MIN, TIME_RANDOM_MAX);//ランダム値の決定
+		RouletteTimer = randomTime;//タイマーセット
+	}
+	private void setTurnOnTimer()
+	{
+		TurnOnTimer = TIME_TURN_ON;
 	}
 }
